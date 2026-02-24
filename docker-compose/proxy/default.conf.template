@@ -20,6 +20,14 @@ server {
         proxy_set_header      Connection $connection_upgrade;
         proxy_cache_bypass    $http_upgrade;
     }
+    # Serve brand assets as static files (using /brand-assets/ to avoid collision with frontend /assets/)
+    location /brand-assets/ {
+        alias /usr/share/nginx/brand-assets/;
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
+    }
+
     location / {
         proxy_pass            ${FRONT_PROXY_PASS};
         proxy_http_version    1.1;
@@ -30,6 +38,12 @@ server {
         proxy_set_header      Upgrade "$http_upgrade";
         proxy_set_header      Connection $connection_upgrade;
         proxy_cache_bypass    $http_upgrade;
+
+        # Inject logo resize script into HTML responses
+        sub_filter '</head>' '<script>!function(){function r(){document.querySelectorAll("img[src*=network_logo],img[src*=network_icon]").forEach(function(i){i.style.setProperty("height","80px","important");i.style.setProperty("max-height","80px","important");i.style.setProperty("width","auto","important");i.style.setProperty("max-width","220px","important");i.style.setProperty("object-fit","contain","important");i.style.setProperty("background","transparent","important");i.style.setProperty("border-radius","0","important");var p=i.parentElement;if(p){p.style.setProperty("height","auto","important");p.style.setProperty("max-height","90px","important");p.style.setProperty("overflow","visible","important");p.style.setProperty("width","auto","important");p.style.setProperty("max-width","220px","important");p.style.setProperty("background","transparent","important");p.style.setProperty("border-radius","0","important");p.style.setProperty("box-shadow","none","important");var g=p.parentElement;if(g){g.style.setProperty("height","auto","important");g.style.setProperty("max-height","100px","important");g.style.setProperty("overflow","visible","important");g.style.setProperty("background","transparent","important")}}})}new MutationObserver(r).observe(document.documentElement,{childList:!0,subtree:!0});setInterval(r,2000)}();</script></head>';
+        sub_filter_once on;
+        sub_filter_types text/html;
+        proxy_set_header Accept-Encoding "";
     }
 }
 server {

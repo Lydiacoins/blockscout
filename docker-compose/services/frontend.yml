@@ -9,3 +9,7 @@ services:
     container_name: 'frontend'
     env_file:
       -  ../envs/common-frontend.env
+    entrypoint: ["/app/public/brand-assets/entrypoint-wrapper.sh"]
+    command: ["node", "server.js"]
+    volumes:
+      - "../brand-assets:/app/public/brand-assets:ro"

@@ -1,5 +1,8 @@
 version: '3.9'
 
+volumes:
+  backend-dets:
+
 services:
   redis-db:
     extends:
@@ -20,36 +23,33 @@ services:
       service: db
 
   backend:
+    image: ghcr.io/blockscout/blockscout-arbitrum:latest
     depends_on:
       - db
       - redis-db
     extends:
       file: ./services/backend.yml
       service: backend
-    build:
-      context: ..
-      dockerfile: ./docker/Dockerfile
-      args:
-        RELEASE_VERSION: 9.0.2
+    env_file:
+      - ./envs/common-blockscout.env
+    volumes:
+      - ./logs/:/app/logs/
+      - backend-dets:/app/dets
     links:
       - db:database
     environment:
-        ETHEREUM_JSONRPC_HTTP_URL: http://host.docker.internal:8545/
-        ETHEREUM_JSONRPC_TRACE_URL: http://host.docker.internal:8545/
-        ETHEREUM_JSONRPC_WS_URL: ws://host.docker.internal:8545/
-        CHAIN_ID: '1337'
+        ETHEREUM_JSONRPC_HTTP_URL: https://rpc.lydiacoins.com
+        ETHEREUM_JSONRPC_TRACE_URL: https://rpc.lydiacoins.com
+        CHAIN_ID: '1989'
+        CHAIN_TYPE: arbitrum
 
   nft_media_handler:
+    image: ghcr.io/blockscout/blockscout-arbitrum:latest
     depends_on:
       - backend
     extends:
       file: ./services/nft_media_handler.yml
       service: nft_media_handler
-    build:
-      context: ..
-      dockerfile: ./docker/Dockerfile
-      args:
-        RELEASE_VERSION: 9.0.2
 
   visualizer:
     extends:
